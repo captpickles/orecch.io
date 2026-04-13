@@ -2,7 +2,9 @@ import { config as appConfig } from "./config.js";
 import { createRepository } from "./data/repository.js";
 import { renderSummaryChart } from "./charts/summaryChart.js";
 import { renderTimelineChart } from "./charts/timelineChart.js";
+import { renderChartPlaceholder } from "./charts/placeholder.js";
 import { renderEventTypeFilters } from "./ui/controls.js";
+import { renderTypeLegend } from "./ui/legend.js";
 import {
   clampDateRange,
   addDays,
@@ -17,8 +19,10 @@ const elements = {
   eventTypeFilters: document.querySelector("#event-type-filters"),
   summaryChart: document.querySelector("#summary-chart"),
   timelineChart: document.querySelector("#timeline-chart"),
+  timelineLegend: document.querySelector("#timeline-legend"),
   status: document.querySelector("#status"),
-  selectedDayLabel: document.querySelector("#selected-day-label")
+  selectedDayLabel: document.querySelector("#selected-day-label"),
+  lastUpdated: document.querySelector("#last-updated")
 };
 
 const state = {
@@ -80,7 +84,8 @@ async function reloadAll() {
 
 async function reloadSummary() {
   try {
-    setStatus("Loading daily summaries...");
+    setStatus("Loading daily summaries...", "loading");
+    renderChartPlaceholder(elements.summaryChart, "Loading 7-day summary...");
     const startDate = new Date(`${state.startKey}T00:00:00`);
     const endDate = new Date(`${state.endKey}T00:00:00`);
     const summaryResult = await state.repository.getSummaryRows(startDate, endDate);
@@ -91,34 +96,38 @@ async function reloadSummary() {
     }
     renderFilters();
     renderCharts();
-    setStatus("Summary loaded.");
+    setStatus("Summary loaded.", "ok");
   } catch (error) {
     console.error(error);
-    setStatus(`Failed to load summary: ${error.message}`, true);
+    setStatus(`Failed to load summary: ${error.message}`, "error");
+    renderChartPlaceholder(elements.summaryChart, "Could not load summary data.", "error");
   }
 }
 
 async function loadSelectedDayEvents() {
   cleanupRealtime();
   try {
-    setStatus(`Loading events for ${state.selectedDayKey}...`);
+    setStatus(`Loading events for ${state.selectedDayKey}...`, "loading");
+    renderChartPlaceholder(elements.timelineChart, "Loading day timeline...");
     const events = await state.repository.getDayEvents(state.selectedDayKey);
     state.dayEvents = events;
     reconcileSelectedDaySummaryWithEvents();
     mergeEventTypes(uniqueTypes(events));
     renderFilters();
     renderCharts();
+    markLastUpdated();
     setupRealtimeIfAvailable();
   } catch (error) {
     console.error(error);
-    setStatus(`Failed to load day events: ${error.message}`, true);
+    setStatus(`Failed to load day events: ${error.message}`, "error");
+    renderChartPlaceholder(elements.timelineChart, "Could not load day timeline.", "error");
   }
 }
 
 function setupRealtimeIfAvailable() {
   const isToday = state.selectedDayKey === getTodayKey();
   if (!isToday) {
-    setStatus(`Showing ${state.selectedDayKey}.`);
+    setStatus(`Showing ${state.selectedDayKey}.`, "ok");
     return;
   }
 
@@ -133,10 +142,11 @@ function setupRealtimeIfAvailable() {
         mergeEventTypes(uniqueTypes(state.dayEvents));
         renderFilters();
         renderCharts();
-        setStatus("Live RTDB updates active for today.");
+        markLastUpdated();
+        setStatus("Live updates active for today.", "ok");
       }
     );
-    setStatus("Listening for live updates on today's events...");
+    setStatus("Listening for live updates on today's events...", "loading");
     return;
   }
 
@@ -145,11 +155,12 @@ function setupRealtimeIfAvailable() {
       state.dayEvents = await state.repository.getDayEvents(state.selectedDayKey);
       reconcileSelectedDaySummaryWithEvents();
       renderCharts();
+      markLastUpdated();
     } catch (err) {
       console.error("poll error", err);
     }
   }, appConfig.pollMs);
-  setStatus(`Polling today's events every ${Math.round(appConfig.pollMs / 1000)}s.`);
+  setStatus(`Polling today's events every ${Math.round(appConfig.pollMs / 1000)}s.`, "loading");
 }
 
 function cleanupRealtime() {
@@ -173,6 +184,8 @@ function renderFilters() {
 }
 
 function renderCharts() {
+  renderTypeLegend(elements.timelineLegend, state.eventTypes, state.selectedEventTypes);
+
   renderSummaryChart({
     container: elements.summaryChart,
     rows: state.summaryRows,
@@ -239,9 +252,21 @@ function syncDateInputs() {
   elements.endDate.value = state.endKey;
 }
 
-function setStatus(message, isError = false) {
+function setStatus(message, level = "ok") {
   elements.status.textContent = message;
-  elements.status.style.color = isError ? "#bd2b00" : "";
+  elements.status.className = `status ${level}`;
+}
+
+function markLastUpdated() {
+  const stamp = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  }).format(new Date());
+  elements.lastUpdated.textContent = `Last updated: ${stamp} ET`;
 }
 
 function debounce(fn, waitMs) {

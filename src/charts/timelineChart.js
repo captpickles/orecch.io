@@ -1,6 +1,7 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { parseIsoLocal } from "../utils/date.js";
 import { createTypeColorScale } from "./colors.js";
+import { renderChartPlaceholder } from "./placeholder.js";
 
 const easternTimeFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: "America/New_York",
@@ -20,7 +21,10 @@ export function renderTimelineChart({
 
   const filtered = events.filter((evt) => selectedEventTypes.has(evt.event_type));
   if (!filtered.length) {
-    container.textContent = `No events for ${selectedDayKey} with current filters.`;
+    renderChartPlaceholder(
+      container,
+      `No events for ${selectedDayKey} with current filters.`
+    );
     return;
   }
 
@@ -34,6 +38,10 @@ export function renderTimelineChart({
       startDate: parseIsoLocal(evt.start_utc)
     }))
     .filter((evt) => evt.startDate);
+  if (!parsed.length) {
+    renderChartPlaceholder(container, `No valid timestamps for ${selectedDayKey}.`);
+    return;
+  }
 
   const mergedPoints = mergeOverlappingEvents(parsed);
 

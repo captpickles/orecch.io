@@ -1,6 +1,7 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { formatDayLabel } from "../utils/date.js";
 import { createTypeColorScale } from "./colors.js";
+import { renderChartPlaceholder } from "./placeholder.js";
 
 export function renderSummaryChart({
   container,
@@ -12,7 +13,7 @@ export function renderSummaryChart({
 }) {
   container.innerHTML = "";
   if (!rows.length || !eventTypes.length) {
-    container.textContent = "No summary data for this date range.";
+    renderChartPlaceholder(container, "No summary data for this date range.");
     return;
   }
 
@@ -22,7 +23,7 @@ export function renderSummaryChart({
 
   const activeTypes = eventTypes.filter((t) => selectedEventTypes.has(t));
   if (!activeTypes.length) {
-    container.textContent = "Select at least one event type.";
+    renderChartPlaceholder(container, "Select at least one event type.");
     return;
   }
 
