@@ -2,6 +2,7 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { parseIsoLocal } from "../utils/date.js";
 import { createTypeColorScale } from "./colors.js";
 import { renderChartPlaceholder } from "./placeholder.js";
+import { formatEventTypeLabel } from "../utils/labels.js";
 
 const easternTimeFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: "America/New_York",
@@ -83,7 +84,21 @@ export function renderTimelineChart({
   svg
     .append("g")
     .attr("transform", `translate(${margin.left},0)`)
-    .call(d3.axisLeft(y));
+    .call(d3.axisLeft(y).tickFormat((value) => formatEventTypeLabel(value)));
+
+  svg
+    .append("g")
+    .attr("class", "timeline-row-guides")
+    .selectAll("line")
+    .data(activeTypes)
+    .join("line")
+    .attr("x1", margin.left)
+    .attr("x2", width - margin.right)
+    .attr("y1", (type) => y(type))
+    .attr("y2", (type) => y(type))
+    .attr("stroke", "#5b4d3b")
+    .attr("stroke-opacity", 0.68)
+    .attr("stroke-dasharray", "3,4");
 
   svg
     .append("g")
@@ -98,7 +113,9 @@ export function renderTimelineChart({
     .attr("stroke", "#173564")
     .attr("stroke-width", 0.7)
     .on("mouseenter", (event, d) => {
-      tooltip.innerHTML = `${d.event_type}<br>${formatTime(d.startDate)}<br>${
+      tooltip.innerHTML = `${formatEventTypeLabel(d.event_type)}<br>${formatTime(
+        d.startDate
+      )}<br>${
         d.eventCount
       } event${d.eventCount === 1 ? "" : "s"}<br>${Math.round(
         d.totalDurationSeconds || 0

@@ -1,4 +1,5 @@
 import { createTypeColorScale } from "../charts/colors.js";
+import { formatEventTypeLabel } from "../utils/labels.js";
 
 export function renderTypeLegend(container, eventTypes, selectedEventTypes) {
   container.innerHTML = "";
@@ -16,7 +17,7 @@ export function renderTypeLegend(container, eventTypes, selectedEventTypes) {
     swatch.style.backgroundColor = color(type);
 
     const text = document.createElement("span");
-    text.textContent = type;
+    text.textContent = formatEventTypeLabel(type);
 
     item.append(swatch, text);
     container.append(item);

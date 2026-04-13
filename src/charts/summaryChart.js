@@ -2,6 +2,7 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { formatDayLabel } from "../utils/date.js";
 import { createTypeColorScale } from "./colors.js";
 import { renderChartPlaceholder } from "./placeholder.js";
+import { formatEventTypeLabel } from "../utils/labels.js";
 
 export function renderSummaryChart({
   container,
@@ -19,7 +20,7 @@ export function renderSummaryChart({
 
   const width = container.clientWidth || 900;
   const height = Math.max(280, Math.floor(width * 0.42));
-  const margin = { top: 16, right: 12, bottom: 42, left: 42 };
+  const margin = { top: 22, right: 12, bottom: 42, left: 68 };
 
   const activeTypes = eventTypes.filter((t) => selectedEventTypes.has(t));
   if (!activeTypes.length) {
@@ -100,36 +101,15 @@ export function renderSummaryChart({
         (acc, type) => acc + (d.data[type] || 0),
         0
       );
-      tooltip.innerHTML = `${d.data.dateKey}<br>${d.type}: ${formatDuration(
-        d.data[d.type]
-      )}<br>Total: ${formatDuration(dayTotal)}`;
+      tooltip.innerHTML = `${d.data.dateKey}<br>${formatEventTypeLabel(
+        d.type
+      )}: ${formatDuration(d.data[d.type])}<br>Total: ${formatDuration(dayTotal)}`;
       tooltip.classList.add("visible");
       moveTooltip(tooltip, event);
     })
     .on("mousemove", (event) => moveTooltip(tooltip, event))
     .on("mouseleave", () => tooltip.classList.remove("visible"))
     .on("click", (_, d) => onSelectDay(d.data.dateKey));
-
-  const legend = svg
-    .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
-
-  stackKeys.forEach((type, index) => {
-    const xOffset = index * 110;
-    const group = legend.append("g").attr("transform", `translate(${xOffset},0)`);
-    group
-      .append("rect")
-      .attr("width", 10)
-      .attr("height", 10)
-      .attr("rx", 2)
-      .attr("fill", color(type));
-    group
-      .append("text")
-      .attr("x", 15)
-      .attr("y", 9)
-      .style("font-size", "11px")
-      .text(type);
-  });
 
   container.append(svg.node());
 }
@@ -162,10 +142,17 @@ function formatDuration(seconds) {
 function formatDurationShort(seconds) {
   const total = Math.max(0, Math.round(seconds || 0));
   if (total >= 3600) {
-    return `${(total / 3600).toFixed(1)}h`;
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const secs = total % 60;
+    if (secs === 0) return `${hours}h ${minutes}m`;
+    return `${hours}h ${minutes}m ${secs}s`;
   }
   if (total >= 60) {
-    return `${Math.round(total / 60)}m`;
+    const minutes = Math.floor(total / 60);
+    const secs = total % 60;
+    if (secs === 0) return `${minutes}m`;
+    return `${minutes}m ${secs}s`;
   }
   return `${total}s`;
 }

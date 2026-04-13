@@ -1,3 +1,5 @@
+import { formatEventTypeLabel } from "../utils/labels.js";
+
 export function renderEventTypeFilters(container, eventTypes, selected, onChange) {
   container.innerHTML = "";
   if (!eventTypes.length) {
@@ -19,7 +21,7 @@ export function renderEventTypeFilters(container, eventTypes, selected, onChange
       onChange();
     });
     const text = document.createElement("span");
-    text.textContent = type;
+    text.textContent = formatEventTypeLabel(type);
     label.append(input, text);
     container.append(label);
   });

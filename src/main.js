@@ -18,6 +18,7 @@ const elements = {
   endDate: document.querySelector("#end-date"),
   eventTypeFilters: document.querySelector("#event-type-filters"),
   summaryChart: document.querySelector("#summary-chart"),
+  summaryLegend: document.querySelector("#summary-legend"),
   timelineChart: document.querySelector("#timeline-chart"),
   timelineLegend: document.querySelector("#timeline-legend"),
   status: document.querySelector("#status"),
@@ -184,6 +185,7 @@ function renderFilters() {
 }
 
 function renderCharts() {
+  renderTypeLegend(elements.summaryLegend, state.eventTypes, state.selectedEventTypes);
   renderTypeLegend(elements.timelineLegend, state.eventTypes, state.selectedEventTypes);
 
   renderSummaryChart({
