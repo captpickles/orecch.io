@@ -1,0 +1,54 @@
+{
+  "-Nsample0001": {
+    "event_type": "engine_idle",
+    "start_utc": "2026-04-13T08:12:11Z",
+    "end_utc": "2026-04-13T08:13:01Z",
+    "duration_seconds": 50,
+    "peak_score": 0.84,
+    "hit_count": 12,
+    "matched_labels": ["engine", "idling"],
+    "date_utc": "2026-04-13",
+    "event_count_for_day": 1,
+    "total_duration_seconds_for_day": 50,
+    "ingested_at_utc": "2026-04-13T08:13:05Z"
+  },
+  "-Nsample0002": {
+    "event_type": "mower",
+    "start_utc": "2026-04-13T09:20:00Z",
+    "end_utc": "2026-04-13T09:23:10Z",
+    "duration_seconds": 190,
+    "peak_score": 0.91,
+    "hit_count": 20,
+    "matched_labels": ["lawn mower"],
+    "date_utc": "2026-04-13",
+    "event_count_for_day": 2,
+    "total_duration_seconds_for_day": 240,
+    "ingested_at_utc": "2026-04-13T09:23:15Z"
+  },
+  "-Nsample0003": {
+    "event_type": "engine_idle",
+    "start_utc": "2026-04-13T11:41:10Z",
+    "end_utc": "2026-04-13T11:42:20Z",
+    "duration_seconds": 70,
+    "peak_score": 0.82,
+    "hit_count": 14,
+    "matched_labels": ["engine", "vehicle"],
+    "date_utc": "2026-04-13",
+    "event_count_for_day": 3,
+    "total_duration_seconds_for_day": 310,
+    "ingested_at_utc": "2026-04-13T11:42:23Z"
+  },
+  "-Nsample0004": {
+    "event_type": "siren",
+    "start_utc": "2026-04-12T18:45:00Z",
+    "end_utc": "2026-04-12T18:45:11Z",
+    "duration_seconds": 11,
+    "peak_score": 0.88,
+    "hit_count": 5,
+    "matched_labels": ["siren"],
+    "date_utc": "2026-04-12",
+    "event_count_for_day": 1,
+    "total_duration_seconds_for_day": 11,
+    "ingested_at_utc": "2026-04-12T18:45:13Z"
+  }
+}

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orecchio: The All Hearing Ear.</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-header">
+        <div class="brand">
+          <img class="brand-logo" src="./orecchio.png" alt="Orecchio logo" />
+          <div>
+            <h1>Orecchio: The All Hearing Ear.</h1>
+            <p class="subhead">Acoustic Events Dashboard</p>
+          </div>
+        </div>
+      </header>
+
+      <section class="panel controls-panel">
+        <div class="controls-grid">
+          <label>
+            Start date
+            <input id="start-date" type="date" />
+          </label>
+          <label>
+            End date
+            <input id="end-date" type="date" />
+          </label>
+        </div>
+        <div id="event-type-filters" class="event-type-filters"></div>
+        <p id="status" class="status">Initializing...</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title-row">
+          <h2>Day Timeline (US/Eastern)</h2>
+          <span id="selected-day-label" class="selected-day-label"></span>
+        </div>
+        <div id="timeline-chart" class="chart-container"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title-row">
+          <h2>Past 7 Days Event Time (Stacked)</h2>
+        </div>
+        <div id="summary-chart" class="chart-container"></div>
+      </section>
+
+      <footer class="page-footer">
+        Copyright 2026 Capt Pickles EnviroMetricks Division
+      </footer>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

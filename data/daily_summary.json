@@ -1,0 +1,112 @@
+{
+  "2026-04-07": {
+    "engine_idle": {
+      "date_utc": "2026-04-07",
+      "event_type": "engine_idle",
+      "event_count": 5,
+      "total_duration_seconds": 194,
+      "avg_duration_seconds": 38.8,
+      "updated_at_utc": "2026-04-07T23:59:00Z"
+    },
+    "siren": {
+      "date_utc": "2026-04-07",
+      "event_type": "siren",
+      "event_count": 3,
+      "total_duration_seconds": 41,
+      "avg_duration_seconds": 13.7,
+      "updated_at_utc": "2026-04-07T23:59:00Z"
+    }
+  },
+  "2026-04-08": {
+    "mower": {
+      "date_utc": "2026-04-08",
+      "event_type": "mower",
+      "event_count": 2,
+      "total_duration_seconds": 360,
+      "avg_duration_seconds": 180,
+      "updated_at_utc": "2026-04-08T23:59:00Z"
+    },
+    "engine_idle": {
+      "date_utc": "2026-04-08",
+      "event_type": "engine_idle",
+      "event_count": 4,
+      "total_duration_seconds": 140,
+      "avg_duration_seconds": 35,
+      "updated_at_utc": "2026-04-08T23:59:00Z"
+    }
+  },
+  "2026-04-09": {
+    "bell": {
+      "date_utc": "2026-04-09",
+      "event_type": "bell",
+      "event_count": 6,
+      "total_duration_seconds": 36,
+      "avg_duration_seconds": 6,
+      "updated_at_utc": "2026-04-09T23:59:00Z"
+    }
+  },
+  "2026-04-10": {
+    "revving": {
+      "date_utc": "2026-04-10",
+      "event_type": "revving",
+      "event_count": 4,
+      "total_duration_seconds": 52,
+      "avg_duration_seconds": 13,
+      "updated_at_utc": "2026-04-10T23:59:00Z"
+    },
+    "train_horn": {
+      "date_utc": "2026-04-10",
+      "event_type": "train_horn",
+      "event_count": 1,
+      "total_duration_seconds": 9,
+      "avg_duration_seconds": 9,
+      "updated_at_utc": "2026-04-10T23:59:00Z"
+    }
+  },
+  "2026-04-11": {
+    "engine_idle": {
+      "date_utc": "2026-04-11",
+      "event_type": "engine_idle",
+      "event_count": 7,
+      "total_duration_seconds": 220,
+      "avg_duration_seconds": 31.4,
+      "updated_at_utc": "2026-04-11T23:59:00Z"
+    }
+  },
+  "2026-04-12": {
+    "siren": {
+      "date_utc": "2026-04-12",
+      "event_type": "siren",
+      "event_count": 2,
+      "total_duration_seconds": 25,
+      "avg_duration_seconds": 12.5,
+      "updated_at_utc": "2026-04-12T23:59:00Z"
+    },
+    "bell": {
+      "date_utc": "2026-04-12",
+      "event_type": "bell",
+      "event_count": 3,
+      "total_duration_seconds": 18,
+      "avg_duration_seconds": 6,
+      "updated_at_utc": "2026-04-12T23:59:00Z"
+    }
+  },
+  "2026-04-13": {
+    "engine_idle": {
+      "date_utc": "2026-04-13",
+      "event_type": "engine_idle",
+      "event_count": 3,
+      "total_duration_seconds": 120,
+      "avg_duration_seconds": 40,
+      "updated_at_utc": "2026-04-13T12:00:00Z"
+    },
+    "mower": {
+      "date_utc": "2026-04-13",
+      "event_type": "mower",
+      "event_count": 1,
+      "total_duration_seconds": 190,
+      "avg_duration_seconds": 190,
+      "updated_at_utc": "2026-04-13T12:00:00Z"
+    }
+  }
+}
