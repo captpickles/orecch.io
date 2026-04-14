@@ -32,26 +32,31 @@ export function renderTimelineChart({
   const width = container.clientWidth || 900;
   const height = Math.max(280, Math.floor(width * 0.42));
   const margin = { top: 16, right: 16, bottom: 42, left: 80 };
+  const dayStart = new Date(`${selectedDayKey}T00:00:00`);
+  const dayEnd = new Date(`${selectedDayKey}T23:59:59.999`);
 
   const parsed = filtered
     .map((evt) => ({
       ...evt,
       startDate: parseIsoLocal(evt.start_utc)
     }))
-    .filter((evt) => evt.startDate);
+    .filter(
+      (evt) => evt.startDate && evt.startDate >= dayStart && evt.startDate <= dayEnd
+    );
   if (!parsed.length) {
     renderChartPlaceholder(container, `No valid timestamps for ${selectedDayKey}.`);
     return;
   }
 
   const mergedPoints = mergeOverlappingEvents(parsed);
+  const drawOrderPoints = [...mergedPoints].sort(
+    (a, b) => (b.totalDurationSeconds || 0) - (a.totalDurationSeconds || 0)
+  );
 
   const x = d3
     .scaleTime()
-    .domain([
-      new Date(`${selectedDayKey}T00:00:00`),
-      new Date(`${selectedDayKey}T23:59:59`)
-    ])
+    .domain([dayStart, dayEnd])
+    .clamp(true)
     .range([margin.left, width - margin.right]);
 
   const activeTypes = eventTypes.filter((t) => selectedEventTypes.has(t));
@@ -103,7 +108,7 @@ export function renderTimelineChart({
   svg
     .append("g")
     .selectAll("circle")
-    .data(mergedPoints)
+    .data(drawOrderPoints)
     .join("circle")
     .attr("cx", (d) => x(d.startDate))
     .attr("cy", (d) => y(d.event_type))
