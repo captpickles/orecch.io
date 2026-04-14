@@ -25,11 +25,13 @@ Open `http://localhost:8080`.
 
 ## Configure data source
 
-Default DB URL is already set in [`src/config.js`](/Users/bob/repos/captpickles/orecch.io/src/config.js).
+Edit [`config/site-config.js`](/Users/bob/repos/captpickles/orecch.io/config/site-config.js) for your instance:
 
-- Change mode in the page UI: `Firebase SDK`, `Firebase REST + auth token`, or `JSON export`.
-- Optional auth token is entered in the page and saved to localStorage (`orecchio.authToken`).
-- To change DB URL or JSON file paths, edit [`src/config.js`](/Users/bob/repos/captpickles/orecch.io/src/config.js).
+- `dataMode`: `firebase-sdk`, `firebase-rest`, or `json`
+- `firebase.databaseURL` and `rest.databaseURL`
+- Optional auth fields (`firebase.customAuthToken` or `rest.authToken`)
+- Optional Firebase SDK app metadata (`apiKey`, `authDomain`, `projectId`, `appId`) when auth is used
+- `daylight.startHour` and `daylight.endHour` for timeline daylight shading
 
 ## Deploy
 

@@ -24,5 +24,15 @@ export const config = {
     dailySummaryUrl:
       windowConfig.json?.dailySummaryUrl || "./data/daily_summary.json",
     eventsUrl: windowConfig.json?.eventsUrl || "./data/events.json"
+  },
+  daylight: {
+    startHour: clampHour(windowConfig.daylight?.startHour, 8),
+    endHour: clampHour(windowConfig.daylight?.endHour, 20)
   }
 };
+
+function clampHour(value, fallback) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return fallback;
+  return Math.max(0, Math.min(23, Math.floor(num)));
+}

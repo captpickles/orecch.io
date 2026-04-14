@@ -206,7 +206,9 @@ function renderCharts() {
     events: state.dayEvents,
     eventTypes: state.eventTypes,
     selectedEventTypes: state.selectedEventTypes,
-    selectedDayKey: state.selectedDayKey
+    selectedDayKey: state.selectedDayKey,
+    daylightStartHour: appConfig.daylight.startHour,
+    daylightEndHour: appConfig.daylight.endHour
   });
   elements.selectedDayLabel.textContent = `Selected day: ${state.selectedDayKey}`;
 }

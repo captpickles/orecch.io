@@ -16,7 +16,9 @@ export function renderTimelineChart({
   events,
   eventTypes,
   selectedEventTypes,
-  selectedDayKey
+  selectedDayKey,
+  daylightStartHour = 8,
+  daylightEndHour = 20
 }) {
   container.innerHTML = "";
 
@@ -58,6 +60,7 @@ export function renderTimelineChart({
     .domain([dayStart, dayEnd])
     .clamp(true)
     .range([margin.left, width - margin.right]);
+  const daylightWindow = getDaylightWindow(selectedDayKey, daylightStartHour, daylightEndHour);
 
   const activeTypes = eventTypes.filter((t) => selectedEventTypes.has(t));
   const y = d3
@@ -85,6 +88,15 @@ export function renderTimelineChart({
         .ticks(width < 650 ? 5 : 8)
         .tickFormat((value) => formatEasternTime(value))
     );
+
+  svg
+    .append("rect")
+    .attr("x", x(daylightWindow.start))
+    .attr("y", margin.top)
+    .attr("width", Math.max(0, x(daylightWindow.end) - x(daylightWindow.start)))
+    .attr("height", height - margin.top - margin.bottom)
+    .attr("fill", "#8f7448")
+    .attr("fill-opacity", 0.12);
 
   svg
     .append("g")
@@ -176,4 +188,20 @@ function getTooltip() {
 function moveTooltip(node, event) {
   node.style.left = `${event.clientX + 12}px`;
   node.style.top = `${event.clientY + 12}px`;
+}
+
+function getDaylightWindow(selectedDayKey, startHour, endHour) {
+  const safeStart = clampHour(startHour);
+  const safeEnd = clampHour(endHour);
+  const [first, second] = safeStart <= safeEnd ? [safeStart, safeEnd] : [safeEnd, safeStart];
+  return {
+    start: new Date(`${selectedDayKey}T${String(first).padStart(2, "0")}:00:00`),
+    end: new Date(`${selectedDayKey}T${String(second).padStart(2, "0")}:00:00`)
+  };
+}
+
+function clampHour(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 0;
+  return Math.max(0, Math.min(23, Math.floor(number)));
 }
