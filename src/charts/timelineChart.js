@@ -18,7 +18,9 @@ export function renderTimelineChart({
   selectedEventTypes,
   selectedDayKey,
   daylightStartHour = 8,
-  daylightEndHour = 20
+  daylightEndHour = 20,
+  showNowMarker = false,
+  nowMs = Date.now()
 }) {
   container.innerHTML = "";
 
@@ -142,6 +144,32 @@ export function renderTimelineChart({
     })
     .on("mousemove", (event) => moveTooltip(tooltip, event))
     .on("mouseleave", () => tooltip.classList.remove("visible"));
+
+  if (showNowMarker) {
+    const now = new Date(nowMs);
+    if (now >= dayStart && now <= dayEnd) {
+      const nowX = x(now);
+      svg
+        .append("line")
+        .attr("x1", nowX)
+        .attr("x2", nowX)
+        .attr("y1", margin.top)
+        .attr("y2", height - margin.bottom)
+        .attr("stroke", "#d7b68a")
+        .attr("stroke-width", 1)
+        .attr("stroke-opacity", 0.5)
+        .attr("stroke-dasharray", "3,5");
+
+      svg
+        .append("text")
+        .attr("x", nowX + 5)
+        .attr("y", margin.top + 10)
+        .style("font-size", "10px")
+        .style("fill", "#d7b68a")
+        .style("opacity", "0.72")
+        .text("now");
+    }
+  }
 
   container.append(svg.node());
 }

@@ -36,7 +36,10 @@ const state = {
   selectedEventTypes: new Set(),
   dayEvents: [],
   unsubscribeLive: null,
-  pollTimer: null
+  pollTimer: null,
+  nowTickTimer: null,
+  isActivelyUpdatingToday: false,
+  nowMs: Date.now()
 };
 
 init();
@@ -128,11 +131,15 @@ async function loadSelectedDayEvents() {
 function setupRealtimeIfAvailable() {
   const isToday = state.selectedDayKey === getTodayKey();
   if (!isToday) {
+    state.isActivelyUpdatingToday = false;
+    stopNowTicker();
     setStatus(`Showing ${state.selectedDayKey}.`, "ok");
     return;
   }
 
   if (state.repository.mode === "firebase-sdk") {
+    state.isActivelyUpdatingToday = true;
+    startNowTicker();
     state.unsubscribeLive = state.repository.subscribeDayEvents(
       state.selectedDayKey,
       (events) => {
@@ -151,6 +158,8 @@ function setupRealtimeIfAvailable() {
     return;
   }
 
+  state.isActivelyUpdatingToday = true;
+  startNowTicker();
   state.pollTimer = setInterval(async () => {
     try {
       state.dayEvents = await state.repository.getDayEvents(state.selectedDayKey);
@@ -165,6 +174,7 @@ function setupRealtimeIfAvailable() {
 }
 
 function cleanupRealtime() {
+  state.isActivelyUpdatingToday = false;
   if (state.unsubscribeLive) {
     state.unsubscribeLive();
     state.unsubscribeLive = null;
@@ -173,6 +183,7 @@ function cleanupRealtime() {
     clearInterval(state.pollTimer);
     state.pollTimer = null;
   }
+  stopNowTicker();
 }
 
 function renderFilters() {
@@ -208,7 +219,9 @@ function renderCharts() {
     selectedEventTypes: state.selectedEventTypes,
     selectedDayKey: state.selectedDayKey,
     daylightStartHour: appConfig.daylight.startHour,
-    daylightEndHour: appConfig.daylight.endHour
+    daylightEndHour: appConfig.daylight.endHour,
+    showNowMarker: state.isActivelyUpdatingToday,
+    nowMs: state.nowMs
   });
   elements.selectedDayLabel.textContent = `Selected day: ${state.selectedDayKey}`;
 }
@@ -279,4 +292,19 @@ function debounce(fn, waitMs) {
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), waitMs);
   };
+}
+
+function startNowTicker() {
+  state.nowMs = Date.now();
+  if (state.nowTickTimer) return;
+  state.nowTickTimer = setInterval(() => {
+    state.nowMs = Date.now();
+    renderCharts();
+  }, 60000);
+}
+
+function stopNowTicker() {
+  if (!state.nowTickTimer) return;
+  clearInterval(state.nowTickTimer);
+  state.nowTickTimer = null;
 }
