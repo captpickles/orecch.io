@@ -52,8 +52,8 @@ export function renderTimelineChart({
     return;
   }
 
-  const mergedPoints = mergeOverlappingEvents(parsed);
-  const drawOrderPoints = [...mergedPoints].sort(
+  const mergedMarks = mergeIntoDurationMarks(parsed);
+  const drawOrderMarks = [...mergedMarks].sort(
     (a, b) => (b.totalDurationSeconds || 0) - (a.totalDurationSeconds || 0)
   );
 
@@ -70,12 +70,6 @@ export function renderTimelineChart({
     .domain(activeTypes)
     .range([margin.top, height - margin.bottom])
     .padding(0.5);
-
-  const durationExtent = d3.extent(mergedPoints, (d) => d.totalDurationSeconds || 0);
-  const radius = d3
-    .scaleSqrt()
-    .domain([durationExtent[0] || 0, durationExtent[1] || 1])
-    .range([3, 12]);
 
   const color = createTypeColorScale(eventTypes);
   const svg = d3.create("svg").attr("viewBox", `0 0 ${width} ${height}`);
@@ -121,29 +115,82 @@ export function renderTimelineChart({
 
   svg
     .append("g")
-    .selectAll("circle")
-    .data(drawOrderPoints)
-    .join("circle")
-    .attr("cx", (d) => x(d.startDate))
-    .attr("cy", (d) => y(d.event_type))
-    .attr("r", (d) => radius(d.totalDurationSeconds || 0))
-    .attr("fill", (d) => color(d.event_type))
-    .attr("fill-opacity", 0.75)
-    .attr("stroke", "#173564")
-    .attr("stroke-width", 0.7)
+    .selectAll("line")
+    .data(drawOrderMarks)
+    .join("line")
+    .attr("x1", (d) => x(d.startDate))
+    .attr("x2", (d) => Math.max(x(d.endDate), x(d.startDate) + 1))
+    .attr("y1", (d) => y(d.event_type))
+    .attr("y2", (d) => y(d.event_type))
+    .attr("stroke", (d) => color(d.event_type))
+    .attr("stroke-width", (d) => (d.eventCount > 1 ? 9 : 6))
+    .attr("stroke-linecap", "round")
+    .attr("stroke-opacity", 0.93)
+    .style("filter", "drop-shadow(0 0 2px rgba(210, 170, 120, 0.32))")
     .on("mouseenter", (event, d) => {
       tooltip.innerHTML = `${formatEventTypeLabel(d.event_type)}<br>${formatTime(
         d.startDate
-      )}<br>${
+      )} - ${formatTime(d.endDate)}<br>${
         d.eventCount
       } event${d.eventCount === 1 ? "" : "s"}<br>${Math.round(
         d.totalDurationSeconds || 0
-      )} sec total`;
+      )} sec ${d.eventCount > 1 ? "combined" : ""}`.trim();
       tooltip.classList.add("visible");
       moveTooltip(tooltip, event);
     })
     .on("mousemove", (event) => moveTooltip(tooltip, event))
     .on("mouseleave", () => tooltip.classList.remove("visible"));
+
+  const hoverLine = svg
+    .append("line")
+    .attr("x1", 0)
+    .attr("x2", 0)
+    .attr("y1", margin.top)
+    .attr("y2", height - margin.bottom)
+    .attr("stroke", "#c9a979")
+    .attr("stroke-width", 1)
+    .attr("stroke-opacity", 0.62)
+    .attr("stroke-dasharray", "3,4")
+    .style("display", "none")
+    .style("pointer-events", "none");
+
+  const hoverLabel = svg
+    .append("text")
+    .attr("x", 0)
+    .attr("y", margin.top + 10)
+    .style("font-size", "10px")
+    .style("fill", "#c9a979")
+    .style("opacity", "0.9")
+    .style("display", "none")
+    .style("pointer-events", "none");
+
+  svg
+    .on("mousemove", (event) => {
+      const [mx, my] = d3.pointer(event, svg.node());
+      if (
+        mx < margin.left ||
+        mx > width - margin.right ||
+        my < margin.top ||
+        my > height - margin.bottom
+      ) {
+        hoverLine.style("display", "none");
+        hoverLabel.style("display", "none");
+        return;
+      }
+      const hoveredTime = x.invert(mx);
+      hoverLine
+        .attr("x1", mx)
+        .attr("x2", mx)
+        .style("display", null);
+      hoverLabel
+        .attr("x", Math.min(mx + 6, width - margin.right - 42))
+        .text(formatEasternTime(hoveredTime))
+        .style("display", null);
+    })
+    .on("mouseleave", () => {
+      hoverLine.style("display", "none");
+      hoverLabel.style("display", "none");
+    });
 
   if (showNowMarker) {
     const now = new Date(nowMs);
@@ -182,25 +229,40 @@ function formatEasternTime(date) {
   return easternTimeFormatter.format(date);
 }
 
-function mergeOverlappingEvents(events) {
+function mergeIntoDurationMarks(events) {
   const groups = new Map();
   events.forEach((event) => {
     const minuteBucket = Math.floor(event.startDate.getTime() / 60000);
     const key = `${event.event_type}::${minuteBucket}`;
+    const endDate = inferEndDate(event);
     const existing = groups.get(key);
     if (!existing) {
       groups.set(key, {
         event_type: event.event_type,
-        startDate: new Date(minuteBucket * 60000),
+        startDate: event.startDate,
+        endDate,
         totalDurationSeconds: Number(event.duration_seconds || 0),
         eventCount: 1
       });
       return;
     }
+    if (event.startDate < existing.startDate) {
+      existing.startDate = event.startDate;
+    }
+    if (endDate > existing.endDate) {
+      existing.endDate = endDate;
+    }
     existing.totalDurationSeconds += Number(event.duration_seconds || 0);
     existing.eventCount += 1;
   });
   return [...groups.values()];
+}
+
+function inferEndDate(event) {
+  const parsedEnd = parseIsoLocal(event.end_utc);
+  if (parsedEnd) return parsedEnd;
+  const fallbackSeconds = Number(event.duration_seconds || 0);
+  return new Date(event.startDate.getTime() + fallbackSeconds * 1000);
 }
 
 function getTooltip() {
