@@ -93,8 +93,8 @@ export function renderSummaryChart({
     .attr("y", (d) => y(d[1]))
     .attr("height", (d) => Math.max(0, y(d[0]) - y(d[1])))
     .attr("width", x.bandwidth())
-    .attr("stroke", (d) => (d.data.dateKey === selectedDayKey ? "#091d42" : "none"))
-    .attr("stroke-width", (d) => (d.data.dateKey === selectedDayKey ? 1.4 : 0))
+    .attr("stroke", (d) => (d.data.dateKey === selectedDayKey ? "#d0ad78" : "none"))
+    .attr("stroke-width", (d) => (d.data.dateKey === selectedDayKey ? 1 : 0))
     .style("cursor", "pointer")
     .on("mouseenter", (event, d) => {
       const dayTotal = activeTypes.reduce(

@@ -1,14 +1,14 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
 const palette = [
-  "#cf9e5f",
-  "#d46a53",
-  "#739a55",
-  "#6e80cf",
-  "#b76bb3",
-  "#5ea8a0",
-  "#c6b04b",
-  "#9a7b6b"
+  "#7f8fbf",
+  "#b5715d",
+  "#7a925f",
+  "#9b7c54",
+  "#8e74a8",
+  "#5f8f91",
+  "#b19a62",
+  "#8a6f61"
 ];
 
 export function createTypeColorScale(eventTypes) {

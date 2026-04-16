@@ -23,7 +23,8 @@ const elements = {
   timelineLegend: document.querySelector("#timeline-legend"),
   status: document.querySelector("#status"),
   selectedDayLabel: document.querySelector("#selected-day-label"),
-  lastUpdated: document.querySelector("#last-updated")
+  lastUpdated: document.querySelector("#last-updated"),
+  themeToggle: document.querySelector("#theme-toggle")
 };
 
 const state = {
@@ -54,6 +55,7 @@ async function init() {
   elements.endDate.value = state.endKey;
 
   wireControls();
+  wireThemeToggle();
   await reloadAll();
   window.addEventListener("resize", debounce(renderCharts, 120));
 }
@@ -292,6 +294,25 @@ function debounce(fn, waitMs) {
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), waitMs);
   };
+}
+
+function wireThemeToggle() {
+  updateThemeToggleLabel();
+  elements.themeToggle.addEventListener("click", () => {
+    const root = document.documentElement;
+    const nextTheme =
+      root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", nextTheme);
+    localStorage.setItem("orecchio.theme", nextTheme);
+    updateThemeToggleLabel();
+    renderCharts();
+  });
+}
+
+function updateThemeToggleLabel() {
+  const current = document.documentElement.getAttribute("data-theme") || "light";
+  elements.themeToggle.textContent =
+    current === "dark" ? "Light mode" : "Dark mode";
 }
 
 function startNowTicker() {

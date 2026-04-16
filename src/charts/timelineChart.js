@@ -91,8 +91,8 @@ export function renderTimelineChart({
     .attr("y", margin.top)
     .attr("width", Math.max(0, x(daylightWindow.end) - x(daylightWindow.start)))
     .attr("height", height - margin.top - margin.bottom)
-    .attr("fill", "#8f7448")
-    .attr("fill-opacity", 0.12);
+    .attr("fill", "#b59663")
+    .attr("fill-opacity", 0.08);
 
   svg
     .append("g")
@@ -109,9 +109,9 @@ export function renderTimelineChart({
     .attr("x2", width - margin.right)
     .attr("y1", (type) => y(type))
     .attr("y2", (type) => y(type))
-    .attr("stroke", "#5b4d3b")
-    .attr("stroke-opacity", 0.68)
-    .attr("stroke-dasharray", "3,4");
+    .attr("stroke", "#4c4336")
+    .attr("stroke-opacity", 0.58)
+    .attr("stroke-dasharray", "2,5");
 
   svg
     .append("g")
@@ -119,14 +119,13 @@ export function renderTimelineChart({
     .data(drawOrderMarks)
     .join("line")
     .attr("x1", (d) => x(d.startDate))
-    .attr("x2", (d) => Math.max(x(d.endDate), x(d.startDate) + 1))
+    .attr("x2", (d) => Math.max(x(d.endDate), x(d.startDate) + 4))
     .attr("y1", (d) => y(d.event_type))
     .attr("y2", (d) => y(d.event_type))
     .attr("stroke", (d) => color(d.event_type))
-    .attr("stroke-width", (d) => (d.eventCount > 1 ? 9 : 6))
+    .attr("stroke-width", (d) => (d.eventCount > 1 ? 12 : 8))
     .attr("stroke-linecap", "round")
-    .attr("stroke-opacity", 0.93)
-    .style("filter", "drop-shadow(0 0 2px rgba(210, 170, 120, 0.32))")
+    .attr("stroke-opacity", 0.97)
     .on("mouseenter", (event, d) => {
       tooltip.innerHTML = `${formatEventTypeLabel(d.event_type)}<br>${formatTime(
         d.startDate
@@ -147,10 +146,10 @@ export function renderTimelineChart({
     .attr("x2", 0)
     .attr("y1", margin.top)
     .attr("y2", height - margin.bottom)
-    .attr("stroke", "#c9a979")
+    .attr("stroke", "#b99867")
     .attr("stroke-width", 1)
-    .attr("stroke-opacity", 0.62)
-    .attr("stroke-dasharray", "3,4")
+    .attr("stroke-opacity", 0.52)
+    .attr("stroke-dasharray", "2,5")
     .style("display", "none")
     .style("pointer-events", "none");
 
@@ -159,8 +158,8 @@ export function renderTimelineChart({
     .attr("x", 0)
     .attr("y", margin.top + 10)
     .style("font-size", "10px")
-    .style("fill", "#c9a979")
-    .style("opacity", "0.9")
+    .style("fill", "#b99867")
+    .style("opacity", "0.78")
     .style("display", "none")
     .style("pointer-events", "none");
 
@@ -202,18 +201,18 @@ export function renderTimelineChart({
         .attr("x2", nowX)
         .attr("y1", margin.top)
         .attr("y2", height - margin.bottom)
-        .attr("stroke", "#d7b68a")
+        .attr("stroke", "#b99867")
         .attr("stroke-width", 1)
-        .attr("stroke-opacity", 0.5)
-        .attr("stroke-dasharray", "3,5");
+        .attr("stroke-opacity", 0.46)
+        .attr("stroke-dasharray", "2,6");
 
       svg
         .append("text")
         .attr("x", nowX + 5)
         .attr("y", margin.top + 10)
         .style("font-size", "10px")
-        .style("fill", "#d7b68a")
-        .style("opacity", "0.72")
+        .style("fill", "#b99867")
+        .style("opacity", "0.66")
         .text("now");
     }
   }
