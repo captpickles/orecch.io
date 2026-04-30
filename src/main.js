@@ -8,7 +8,7 @@ import { renderEventTypeFilters } from "./ui/controls.js";
 import { renderTypeLegend } from "./ui/legend.js";
 import { clampDateRange, addDays, getTodayKey, toDateKey, parseIsoLocal } from "./utils/date.js";
 
-const route = parseRoute(window.location.pathname);
+const route = parseRoute(resolveRoutePath());
 
 const elements = {
   subhead: document.querySelector("#subhead"),
@@ -897,6 +897,18 @@ function parseRoute(pathname) {
     return { kind: "site-birds", siteId };
   }
   return { kind: "unsupported", siteId: "" };
+}
+
+function resolveRoutePath() {
+  const params = new URLSearchParams(window.location.search);
+  const encodedPath = params.get("p");
+  if (!encodedPath) return window.location.pathname;
+  try {
+    const decoded = decodeURIComponent(encodedPath);
+    return decoded || window.location.pathname;
+  } catch (_error) {
+    return window.location.pathname;
+  }
 }
 
 function formatBirdLabel(raw) {

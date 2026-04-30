@@ -10,7 +10,7 @@
       (function () {
         var target = window.location.pathname + window.location.search + window.location.hash;
         sessionStorage.setItem("orecchio.redirectPath", target);
-        window.location.replace("/");
+        window.location.replace("/?p=" + encodeURIComponent(target));
       })();
     </script>
   </body>

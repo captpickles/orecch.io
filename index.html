@@ -20,6 +20,17 @@
     </script>
     <script>
       (function () {
+        var params = new URLSearchParams(window.location.search);
+        var queryPath = params.get("p");
+        if (queryPath) {
+          try {
+            var decoded = decodeURIComponent(queryPath);
+            if (decoded && decoded !== window.location.pathname) {
+              window.history.replaceState(null, "", decoded);
+            }
+          } catch (_) {}
+        }
+
         const pendingPath = sessionStorage.getItem("orecchio.redirectPath");
         if (!pendingPath) return;
         sessionStorage.removeItem("orecchio.redirectPath");
