@@ -23,13 +23,23 @@ export function createJsonClient(config) {
     return all.filter((event) => event.date_utc === dateKey);
   }
 
-  function subscribeEventsByDate(_dateKey, _callback) {
+  async function getBirdDetections(_siteId = "") {
+    return [];
+  }
+
+  function subscribeEventsByDate(_dateKey, _callback, _siteId = "") {
+    return () => {};
+  }
+
+  function subscribeBirdDetections(_callback, _siteId = "") {
     return () => {};
   }
 
   return {
     getDailySummary,
     getEventsByDate,
-    subscribeEventsByDate
+    subscribeEventsByDate,
+    getBirdDetections,
+    subscribeBirdDetections
   };
 }

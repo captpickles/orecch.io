@@ -14,7 +14,9 @@ No-build, GitHub-Pages-friendly dashboard that reads sound events from Firebase 
 
 ## Run locally
 
-`file://` is not reliable for module imports. Use a tiny static server:
+`file://` is not reliable for module imports.
+
+For `/` only, a plain static server works:
 
 ```bash
 cd /Users/bob/repos/captpickles/orecch.io
@@ -22,6 +24,20 @@ python3 -m http.server 8080
 ```
 
 Open `http://localhost:8080`.
+
+For client-side routes like `/<site-id>/` and `/<site-id>/birds`, use SPA fallback server:
+
+```bash
+cd /Users/bob/repos/captpickles/orecch.io
+python3 serve_local.py
+```
+
+Then open `http://localhost:8000/wytheville-01/`.
+
+## GitHub Pages Route Fallback
+
+This repo includes a `404.html` SPA fallback shim so deep links like
+`/<site-id>/` and `/<site-id>/birds` can resolve on static hosting.
 
 ## Configure data source
 

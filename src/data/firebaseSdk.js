@@ -43,16 +43,16 @@ export function createFirebaseSdkClient(firebaseConfig) {
     await signInWithCustomToken(auth, firebaseConfig.customAuthToken);
   }
 
-  async function getDailySummary() {
+  async function getDailySummary(siteId = "") {
     await maybeAuthenticate();
-    const snapshot = await get(ref(db, "daily_summary"));
+    const snapshot = await get(ref(db, getDailySummaryPath(siteId)));
     return snapshot.val() || {};
   }
 
-  async function getEventsByDate(dateKey) {
+  async function getEventsByDate(dateKey, siteId = "") {
     await maybeAuthenticate();
     const eventsRef = query(
-      ref(db, "events"),
+      ref(db, getEventsPath(siteId)),
       orderByChild("date_utc"),
       equalTo(dateKey)
     );
@@ -60,9 +60,16 @@ export function createFirebaseSdkClient(firebaseConfig) {
     return normalizeEvents(snapshot.val());
   }
 
-  function subscribeEventsByDate(dateKey, callback) {
+  async function getBirdDetections(siteId = "") {
+    if (!siteId) return [];
+    await maybeAuthenticate();
+    const snapshot = await get(ref(db, getBirdsPath(siteId)));
+    return normalizeEvents(snapshot.val());
+  }
+
+  function subscribeEventsByDate(dateKey, callback, siteId = "") {
     const eventsRef = query(
-      ref(db, "events"),
+      ref(db, getEventsPath(siteId)),
       orderByChild("date_utc"),
       equalTo(dateKey)
     );
@@ -86,14 +93,61 @@ export function createFirebaseSdkClient(firebaseConfig) {
     };
   }
 
+  function subscribeBirdDetections(callback, siteId = "") {
+    if (!siteId) {
+      callback([]);
+      return () => {};
+    }
+    const birdsRef = ref(db, getBirdsPath(siteId));
+    let cancelled = false;
+    let detach = null;
+    maybeAuthenticate()
+      .then(() => {
+        if (cancelled) return;
+        detach = onValue(birdsRef, (snap) => {
+          callback(normalizeEvents(snap.val()));
+        });
+      })
+      .catch((err) => {
+        console.error("auth error", err);
+      });
+    return () => {
+      cancelled = true;
+      if (detach) {
+        detach();
+      }
+    };
+  }
+
   return {
     getDailySummary,
     getEventsByDate,
-    subscribeEventsByDate
+    subscribeEventsByDate,
+    getBirdDetections,
+    subscribeBirdDetections
   };
 }
 
 function normalizeEvents(raw) {
   if (!raw || typeof raw !== "object") return [];
   return Object.entries(raw).map(([id, value]) => ({ id, ...value }));
+}
+
+function getSitePrefix(siteId) {
+  return siteId ? `orecchio_sites/${siteId}` : "";
+}
+
+function getDailySummaryPath(siteId) {
+  const prefix = getSitePrefix(siteId);
+  return prefix ? `${prefix}/daily_summary` : "daily_summary";
+}
+
+function getEventsPath(siteId) {
+  const prefix = getSitePrefix(siteId);
+  return prefix ? `${prefix}/events` : "events";
+}
+
+function getBirdsPath(siteId) {
+  const prefix = getSitePrefix(siteId);
+  return `${prefix}/birds`;
 }
