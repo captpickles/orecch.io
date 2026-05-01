@@ -45,7 +45,9 @@
     <main class="page">
       <header class="page-header">
         <div class="brand">
-          <img class="brand-logo" src="/orecchio.png" alt="Orecchio logo" />
+          <a href="/" aria-label="Go to site index">
+            <img class="brand-logo" src="/orecchio.png" alt="Orecchio logo" />
+          </a>
           <div>
             <h1>Orecchio: The All Hearing Ear.</h1>
             <p id="subhead" class="subhead">Acoustic Events Dashboard: Wytheville, Virginia</p>
@@ -108,7 +110,7 @@
           <div id="birds-now-snapshot"></div>
         </section>
 
-        <section class="panel">
+        <section id="birds-heatmap-panel" class="panel">
           <div class="panel-title-row">
             <h2>Bird Occupancy Over Day</h2>
             <span id="birds-selected-day-label" class="selected-day-label"></span>
@@ -121,6 +123,16 @@
             <h2>Seen This Day</h2>
           </div>
           <div id="birds-daily-list"></div>
+        </section>
+      </div>
+
+      <div id="site-index-view" class="hidden">
+        <section class="panel controls-panel">
+          <div class="panel-title-row">
+            <h2>Sites</h2>
+          </div>
+          <p id="site-index-status" class="status">Loading sites...</p>
+          <div id="site-index-list"></div>
         </section>
       </div>
 

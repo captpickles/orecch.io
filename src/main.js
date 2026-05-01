@@ -15,6 +15,7 @@ const elements = {
   routeNote: document.querySelector("#route-note"),
   dashboardView: document.querySelector("#dashboard-view"),
   birdsView: document.querySelector("#birds-view"),
+  siteIndexView: document.querySelector("#site-index-view"),
   startDate: document.querySelector("#start-date"),
   endDate: document.querySelector("#end-date"),
   eventTypeFilters: document.querySelector("#event-type-filters"),
@@ -30,6 +31,8 @@ const elements = {
   birdsSelectedDayLabel: document.querySelector("#birds-selected-day-label"),
   birdsNowSnapshot: document.querySelector("#birds-now-snapshot"),
   birdsDailyList: document.querySelector("#birds-daily-list"),
+  siteIndexStatus: document.querySelector("#site-index-status"),
+  siteIndexList: document.querySelector("#site-index-list"),
   lastUpdated: document.querySelector("#last-updated"),
   themeToggle: document.querySelector("#theme-toggle")
 };
@@ -76,31 +79,49 @@ async function init() {
 }
 
 function applyRouteShell() {
+  if (
+    state.route.kind === "legacy-root" ||
+    state.route.kind === "site-dashboard" ||
+    state.route.kind === "site-birds"
+  ) {
+    document.body.setAttribute("data-mode", "site");
+  } else {
+    document.body.removeAttribute("data-mode");
+  }
+
   if (elements.subhead) {
     if (state.route.kind === "site-birds") {
       elements.subhead.textContent = `Bird Detections Dashboard: ${state.route.siteId}`;
     } else if (state.route.kind === "site-dashboard") {
       elements.subhead.textContent = `Acoustic Events Dashboard: ${state.route.siteId}`;
     } else {
-      elements.subhead.textContent = "Acoustic Events Dashboard: Wytheville, Virginia";
+      elements.subhead.textContent = "Orecchio Site Index";
     }
   }
 
   if (elements.routeNote) {
-    if (state.route.kind === "site-dashboard") {
-      elements.routeNote.textContent = `Path: /${state.route.siteId}/`;
-    } else if (state.route.kind === "site-birds") {
-      elements.routeNote.textContent = `Path: /${state.route.siteId}/birds`;
+    if (state.route.kind === "site-dashboard" || state.route.kind === "site-birds") {
+      const site = encodeURIComponent(state.route.siteId);
+      const nuisanceHref = `/${site}/`;
+      const birdsHref = `/${site}/birds`;
+      const nuisanceLabel =
+        state.route.kind === "site-dashboard" ? "<strong>Nuisance</strong>" : "Nuisance";
+      const birdsLabel =
+        state.route.kind === "site-birds" ? "<strong>Birds</strong>" : "Birds";
+      elements.routeNote.innerHTML = `<a href="${nuisanceHref}">${nuisanceLabel}</a><span class="route-sep"> · </span><a href="${birdsHref}">${birdsLabel}</a>`;
     } else {
       elements.routeNote.textContent = "";
     }
   }
 
   if (elements.dashboardView) {
-    elements.dashboardView.classList.toggle("hidden", state.route.kind === "site-birds");
+    elements.dashboardView.classList.toggle("hidden", state.route.kind !== "site-dashboard");
   }
   if (elements.birdsView) {
     elements.birdsView.classList.toggle("hidden", state.route.kind !== "site-birds");
+  }
+  if (elements.siteIndexView) {
+    elements.siteIndexView.classList.toggle("hidden", state.route.kind !== "legacy-root");
   }
 }
 
@@ -147,12 +168,31 @@ async function reloadAll() {
     state.route.kind === "legacy-root" ? {} : { siteId: state.route.siteId };
   state.repository = createRepository(appConfig, repoOptions);
 
+  if (state.route.kind === "legacy-root") {
+    await loadSiteIndex();
+    return;
+  }
   if (state.route.kind === "site-birds") {
     await loadBirdDay();
     return;
   }
   await reloadSummary();
   await loadSelectedDayEvents();
+}
+
+async function loadSiteIndex() {
+  if (!elements.siteIndexList || !elements.siteIndexStatus) return;
+  try {
+    setSiteIndexStatus("Loading sites...", "loading");
+    const siteIds = await state.repository.getSiteIds();
+    renderSiteIndex(siteIds);
+    setSiteIndexStatus(siteIds.length ? `${siteIds.length} site(s) found.` : "No sites yet.", "ok");
+    markLastUpdated();
+  } catch (error) {
+    console.error(error);
+    setSiteIndexStatus(`Failed to load sites: ${error.message}`, "error");
+    elements.siteIndexList.innerHTML = "";
+  }
 }
 
 async function reloadSummary() {
@@ -381,9 +421,7 @@ function renderCharts() {
 
 function renderBirdView() {
   if (!elements.birdsChart) return;
-  const activeSpecies = new Set(
-    state.birdSpecies.filter((species) => state.selectedBirdSpecies.has(species))
-  );
+  const activeSpecies = new Set(state.birdSpecies);
   renderBirdHeatmapChart({
     container: elements.birdsChart,
     buckets: state.birdBuckets,
@@ -397,8 +435,7 @@ function renderBirdView() {
   }
   renderBirdDailyTable(
     elements.birdsDailyList,
-    state.birdDailyRows,
-    state.selectedBirdSpecies
+    state.birdDailyRows
   );
   renderBirdSnapshotTable(
     elements.birdsNowSnapshot,
@@ -490,6 +527,12 @@ function setBirdStatus(message, level = "ok") {
   elements.birdsStatus.className = `status ${level}`;
 }
 
+function setSiteIndexStatus(message, level = "ok") {
+  if (!elements.siteIndexStatus) return;
+  elements.siteIndexStatus.textContent = message;
+  elements.siteIndexStatus.className = `status ${level}`;
+}
+
 function markLastUpdated() {
   const stamp = new Intl.DateTimeFormat(undefined, {
     month: "short",
@@ -562,7 +605,7 @@ function onResize() {
   }
 }
 
-function renderBirdDailyTable(container, rows, selectedSpecies) {
+function renderBirdDailyTable(container, rows) {
   container.innerHTML = "";
   if (!rows.length) {
     const empty = document.createElement("p");
@@ -579,6 +622,7 @@ function renderBirdDailyTable(container, rows, selectedSpecies) {
         <th>Bird</th>
         <th>Count</th>
         <th>Time</th>
+        <th>Trend</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -589,41 +633,20 @@ function renderBirdDailyTable(container, rows, selectedSpecies) {
     const ebirdUrl = row.ebirdSpeciesCode
       ? `https://ebird.org/species/${encodeURIComponent(row.ebirdSpeciesCode)}`
       : "";
-    const checked = selectedSpecies.has(row.species) ? "checked" : "";
     const linksHtml = ebirdUrl
-      ? `
-      <span class="bird-links">
-        <a href="${escapeHtml(ebirdUrl)}" target="_blank" rel="noopener noreferrer">eBird</a>
-      </span>
-    `
+      ? `<a class="bird-name-link" href="${escapeHtml(ebirdUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(row.species)}</a>`
       : "";
+    const speciesLabelHtml = linksHtml || `<span>${escapeHtml(row.species)}</span>`;
+    const sparklineSvg = renderBirdSparklineSvg(row.species);
     tr.innerHTML = `
       <td>
-        <label class="bird-name-cell">
-          <input class="bird-select" type="checkbox" data-species="${escapeHtml(row.species)}" ${checked} />
-          <span>${escapeHtml(row.species)}</span>
-        </label>
-        ${linksHtml}
+        ${speciesLabelHtml}
       </td>
       <td>${row.count}</td>
       <td>${formatDurationCompact(row.occupiedSeconds)}</td>
+      <td>${sparklineSvg}</td>
     `;
     tbody.append(tr);
-  });
-  tbody.querySelectorAll("input[data-species]").forEach((input) => {
-    input.addEventListener("change", () => {
-      const species = input.getAttribute("data-species");
-      if (!species) return;
-      if (input.checked) {
-        state.selectedBirdSpecies.add(species);
-      } else {
-        state.selectedBirdSpecies.delete(species);
-      }
-      if (state.selectedBirdSpecies.size === 0) {
-        state.birdSpecies.forEach((name) => state.selectedBirdSpecies.add(name));
-      }
-      renderBirdView();
-    });
   });
   container.append(table);
 }
@@ -656,19 +679,15 @@ function renderBirdSnapshotTable(container, rows) {
       ? `https://ebird.org/species/${encodeURIComponent(row.ebirdSpeciesCode)}`
       : "";
     const linksHtml = ebirdUrl
-      ? `
-        <span class="bird-links">
-          <a href="${escapeHtml(ebirdUrl)}" target="_blank" rel="noopener noreferrer">eBird</a>
-        </span>
-      `
+      ? `<a class="bird-name-link" href="${escapeHtml(ebirdUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(row.species)}</a>`
       : "";
+    const speciesLabelHtml = linksHtml || escapeHtml(row.species);
     tr.innerHTML = `
       <td>
-        ${escapeHtml(row.species)}
-        ${linksHtml}
+        ${speciesLabelHtml}
       </td>
       <td>${row.count}</td>
-      <td>${formatDurationCompact(row.activeSeconds)} / 5m</td>
+      <td>${formatDurationCompact(row.activeSeconds)}</td>
     `;
     tbody.append(tr);
   });
@@ -881,6 +900,59 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function renderBirdSparklineSvg(species) {
+  const points = state.birdBuckets.map((bucket) => Number(bucket.fractions[species] || 0));
+  const width = 120;
+  const height = 24;
+  const pad = 2;
+  const max = Math.max(0.08, ...points);
+  const path = points
+    .map((value, index) => {
+      const x = pad + (index / Math.max(1, points.length - 1)) * (width - pad * 2);
+      const y = height - pad - (value / max) * (height - pad * 2);
+      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+  const stroke = "var(--accent)";
+  return `
+    <svg class="bird-sparkline" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
+      <path d="${path}" fill="none" stroke="${stroke}" stroke-width="1.6" />
+    </svg>
+  `;
+}
+
+function renderSiteIndex(siteIds) {
+  if (!elements.siteIndexList) return;
+  elements.siteIndexList.innerHTML = "";
+  if (!siteIds.length) {
+    const empty = document.createElement("p");
+    empty.className = "muted-note";
+    empty.textContent = "No site namespaces found under /orecchio_sites.";
+    elements.siteIndexList.append(empty);
+    return;
+  }
+  const table = document.createElement("table");
+  table.className = "birds-table";
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Site</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  `;
+  const tbody = table.querySelector("tbody");
+  siteIds.forEach((siteId) => {
+    const safeSite = encodeURIComponent(siteId);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><a class="site-index-link" href="/${safeSite}/">${escapeHtml(siteId)}</a></td>
+    `;
+    tbody.append(tr);
+  });
+  elements.siteIndexList.append(table);
 }
 
 

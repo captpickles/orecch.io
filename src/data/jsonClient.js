@@ -27,6 +27,10 @@ export function createJsonClient(config) {
     return [];
   }
 
+  async function getSiteIds() {
+    return [];
+  }
+
   function subscribeEventsByDate(_dateKey, _callback, _siteId = "") {
     return () => {};
   }
@@ -40,6 +44,7 @@ export function createJsonClient(config) {
     getEventsByDate,
     subscribeEventsByDate,
     getBirdDetections,
-    subscribeBirdDetections
+    subscribeBirdDetections,
+    getSiteIds
   };
 }

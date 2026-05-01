@@ -81,7 +81,7 @@ export function renderBirdHeatmapChart({
     .append("g")
     .attr("transform", `translate(${margin.left},0)`)
     .call(
-      d3.axisLeft(y).tickSize(0)
+      d3.axisLeft(y).tickSize(0).tickFormat((name) => toCommonBirdName(name))
     )
     .call((g) => g.select(".domain").remove());
 
@@ -109,7 +109,7 @@ export function renderBirdHeatmapChart({
     .attr("height", y.bandwidth())
     .attr("fill", (d) => (d.fraction > 0 ? color(d.fraction) : "var(--chip-bg)"))
     .on("mouseenter", (event, d) => {
-      tooltip.innerHTML = `${d.species}<br>${timeFormatter.format(
+      tooltip.innerHTML = `${toCommonBirdName(d.species)}<br>${timeFormatter.format(
         d.start
       )} - ${timeFormatter.format(d.end)}<br>Occupancy: ${percentFormatter.format(d.fraction)}`;
       tooltip.classList.add("visible");
@@ -146,4 +146,11 @@ function getTooltip() {
 function moveTooltip(node, event) {
   node.style.left = `${event.clientX + 12}px`;
   node.style.top = `${event.clientY + 12}px`;
+}
+
+function toCommonBirdName(label) {
+  const raw = String(label || "").trim();
+  const match = raw.match(/^(.+)\s+\((.+)\)$/);
+  if (!match) return raw;
+  return match[1].trim();
 }

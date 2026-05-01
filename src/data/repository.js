@@ -129,6 +129,11 @@ export function createRepository(config, options = {}) {
     }, siteId);
   }
 
+  async function getSiteIds() {
+    if (typeof client.getSiteIds !== "function") return [];
+    return client.getSiteIds();
+  }
+
   return {
     mode,
     siteId,
@@ -137,7 +142,8 @@ export function createRepository(config, options = {}) {
     getDayEvents,
     subscribeDayEvents,
     getBirdDetectionsForDay,
-    subscribeBirdDetectionsForDay
+    subscribeBirdDetectionsForDay,
+    getSiteIds
   };
 }
 

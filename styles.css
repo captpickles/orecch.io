@@ -127,6 +127,19 @@ body {
   font-size: 0.78rem;
 }
 
+.route-note a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.route-note a:hover {
+  text-decoration: underline;
+}
+
+.route-sep {
+  opacity: 0.65;
+}
+
 .route-note:empty {
   display: none;
 }
@@ -318,6 +331,7 @@ h2 {
   text-align: left;
   border-bottom: 1px solid var(--border);
   padding: 6px 4px;
+  vertical-align: middle;
 }
 
 .birds-table th {
@@ -342,13 +356,38 @@ h2 {
   font-size: 0.75rem;
 }
 
-.bird-links a {
+.bird-links a,
+.bird-name-link {
   color: var(--accent);
   text-decoration: none;
 }
 
-.bird-links a:hover {
+.bird-links a:hover,
+.bird-name-link:hover {
   text-decoration: underline;
+}
+
+.bird-sparkline {
+  width: 120px;
+  height: 24px;
+  display: block;
+}
+
+.site-index-link {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--header-title);
+  text-decoration: none;
+}
+
+.site-index-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+  #birds-heatmap-panel {
+    display: none;
+  }
 }
 
 .muted-note {
@@ -382,6 +421,176 @@ svg text {
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
   fill: var(--axis);
   font-size: 11.5px;
+}
+
+body[data-mode="site"] {
+  background: #f7f3ea;
+  color: #2c2822;
+}
+
+body[data-mode="site"] .page {
+  max-width: 1260px;
+  padding: 12px 18px 18px;
+  gap: 10px;
+}
+
+body[data-mode="site"] .page-header {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #cbc0ad;
+  border-radius: 0;
+  padding: 4px 0 8px;
+}
+
+body[data-mode="site"] .page-header h1 {
+  font-size: clamp(1.8rem, 3.4vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+body[data-mode="site"] .brand {
+  align-items: flex-start;
+  gap: 10px;
+}
+
+body[data-mode="site"] .brand-logo {
+  width: 54px;
+  height: 54px;
+  border-radius: 2px;
+  opacity: 0.92;
+}
+
+body[data-mode="site"] .theme-toggle {
+  border: 0;
+  border-bottom: 1px solid #b9ad98;
+  background: transparent;
+  border-radius: 0;
+  padding: 2px 0;
+  font-size: 0.77rem;
+  margin-top: 2px;
+}
+
+body[data-mode="site"] .panel {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid #d3c8b7;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 8px 0 2px;
+}
+
+body[data-mode="site"] .controls-panel {
+  padding-top: 6px;
+}
+
+body[data-mode="site"] .controls-grid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, max-content));
+  align-items: end;
+  gap: 10px 14px;
+}
+
+body[data-mode="site"] label {
+  font-size: 0.79rem;
+  letter-spacing: 0.01em;
+  color: #6a604f;
+}
+
+body[data-mode="site"] input,
+body[data-mode="site"] select {
+  border: 1px solid #cfc3ae;
+  border-radius: 0;
+  background: transparent;
+  padding: 5px 7px;
+}
+
+body[data-mode="site"] .event-type-filters {
+  margin-top: 6px;
+  gap: 5px 7px;
+}
+
+body[data-mode="site"] .chip {
+  border: 1px solid #d2c6b3;
+  border-radius: 0;
+  background: transparent;
+  font-size: 0.75rem;
+  padding: 2px 7px;
+}
+
+body[data-mode="site"] .panel-title-row {
+  margin-bottom: 2px;
+}
+
+body[data-mode="site"] h2 {
+  font-size: 1.05rem;
+  letter-spacing: 0.005em;
+  font-weight: 600;
+}
+
+body[data-mode="site"] .selected-day-label {
+  border-radius: 0;
+  background: transparent;
+  border: 1px solid #ccbfa8;
+  padding: 1px 6px;
+  font-size: 0.73rem;
+}
+
+body[data-mode="site"] .chart-container {
+  min-height: 240px;
+  margin-top: 6px;
+}
+
+body[data-mode="site"] .birds-table {
+  font-size: 0.8rem;
+  margin-top: 6px;
+}
+
+body[data-mode="site"] .birds-table th,
+body[data-mode="site"] .birds-table td {
+  padding: 4px 3px;
+  border-bottom: 1px solid #d8cdbb;
+}
+
+body[data-mode="site"] .bird-sparkline {
+  width: 104px;
+  height: 20px;
+}
+
+body[data-mode="site"] .status,
+body[data-mode="site"] .last-updated,
+body[data-mode="site"] .route-note,
+body[data-mode="site"] .subhead {
+  font-size: 0.76rem;
+}
+
+body[data-mode="site"] .status {
+  margin-top: 6px;
+}
+
+body[data-mode="site"] .page-footer {
+  border-top: 1px solid #d3c8b7;
+  margin-top: 4px;
+  padding-top: 7px;
+  font-size: 0.74rem;
+}
+
+@media (max-width: 760px) {
+  body[data-mode="site"] .page {
+    padding: 10px 12px 14px;
+  }
+
+  body[data-mode="site"] .controls-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  body[data-mode="site"] .brand-logo {
+    width: 44px;
+    height: 44px;
+  }
+
+  body[data-mode="site"] .theme-toggle {
+    margin-left: 0;
+  }
 }
 
 svg .domain {

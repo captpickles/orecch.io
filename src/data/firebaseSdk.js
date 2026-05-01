@@ -67,6 +67,13 @@ export function createFirebaseSdkClient(firebaseConfig) {
     return normalizeEvents(snapshot.val());
   }
 
+  async function getSiteIds() {
+    await maybeAuthenticate();
+    const snapshot = await get(ref(db, "orecchio_sites"));
+    const raw = snapshot.val() || {};
+    return Object.keys(raw).sort();
+  }
+
   function subscribeEventsByDate(dateKey, callback, siteId = "") {
     const eventsRef = query(
       ref(db, getEventsPath(siteId)),
@@ -124,7 +131,8 @@ export function createFirebaseSdkClient(firebaseConfig) {
     getEventsByDate,
     subscribeEventsByDate,
     getBirdDetections,
-    subscribeBirdDetections
+    subscribeBirdDetections,
+    getSiteIds
   };
 }
 

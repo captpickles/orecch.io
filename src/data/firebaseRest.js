@@ -43,6 +43,12 @@ export function createFirebaseRestClient(config) {
     return normalizeEvents(payload);
   }
 
+  async function getSiteIds() {
+    const url = withAuth(`${baseUrl}/orecchio_sites.json`, authToken);
+    const payload = await fetchJson(url);
+    return Object.keys(payload || {}).sort();
+  }
+
   function subscribeEventsByDate(_dateKey, _callback, _siteId = "") {
     return () => {};
   }
@@ -56,6 +62,7 @@ export function createFirebaseRestClient(config) {
     getEventsByDate,
     subscribeEventsByDate,
     getBirdDetections,
-    subscribeBirdDetections
+    subscribeBirdDetections,
+    getSiteIds
   };
 }
