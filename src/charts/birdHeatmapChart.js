@@ -30,31 +30,27 @@ export function renderBirdHeatmapChart({
     return;
   }
 
-  const width = container.clientWidth || 900;
-  const rowHeight = Math.max(20, Math.floor(380 / Math.max(1, activeSpecies.length)));
-  const height = Math.max(320, 110 + rowHeight * activeSpecies.length);
-  const margin = { top: 18, right: 16, bottom: 44, left: 280 };
+  const width = container.clientWidth || 980;
+  const rowHeight = 22;
+  const height = Math.max(300, 88 + rowHeight * activeSpecies.length);
+  const margin = { top: 18, right: 18, bottom: 42, left: 280 };
 
-  const xKeys = buckets.map((_, index) => index);
   const x = d3
-    .scaleBand()
-    .domain(xKeys)
-    .range([margin.left, width - margin.right])
-    .paddingInner(0.01);
+    .scaleLinear()
+    .domain([0, Math.max(1, buckets.length - 1)])
+    .range([margin.left, width - margin.right]);
 
-  const y = d3
+  const yRow = d3
     .scaleBand()
     .domain(activeSpecies)
     .range([margin.top, height - margin.bottom])
-    .paddingInner(0.1);
+    .paddingInner(0.25);
 
-  const maxObserved =
-    d3.max(
-      buckets.flatMap((bucket) =>
-        activeSpecies.map((name) => Number(bucket.fractions[name] || 0))
-      )
-    ) || 0.01;
-  const color = d3.scaleSequential(d3.interpolateYlOrBr).domain([0, maxObserved]);
+  const rowInnerPad = 2;
+  const yLocal = d3
+    .scaleLinear()
+    .domain([0, 1])
+    .range([rowHeight - rowInnerPad, rowInnerPad]);
 
   const svg = d3.create("svg").attr("viewBox", `0 0 ${width} ${height}`);
   const tooltip = getTooltip();
@@ -65,58 +61,120 @@ export function renderBirdHeatmapChart({
     .call(
       d3
         .axisBottom(x)
-        .tickValues(xKeys.filter((index) => index % 8 === 0))
+        .tickValues(buildTickIndexes(buckets.length, 16))
         .tickFormat((index) => formatAxisTime(buckets[index].bucketStart))
         .tickSizeOuter(0)
     )
     .call((g) => {
       g.select(".domain").attr("stroke-opacity", 0.3);
-      g.selectAll("line").attr("stroke-opacity", 0.25);
-      g.selectAll("text")
-        .attr("text-anchor", "middle")
-        .attr("dy", "0.9em");
+      g.selectAll("line").attr("stroke-opacity", 0.2);
+      g.selectAll("text").attr("dy", "0.9em");
     });
 
   svg
     .append("g")
     .attr("transform", `translate(${margin.left},0)`)
     .call(
-      d3.axisLeft(y).tickSize(0).tickFormat((name) => toCommonBirdName(name))
+      d3
+        .axisLeft(yRow)
+        .tickSize(0)
+        .tickFormat((name) => truncateLabel(toCommonBirdName(name), 30))
     )
-    .call((g) => g.select(".domain").remove());
-
-  const cellData = [];
-  activeSpecies.forEach((name) => {
-    xKeys.forEach((index) => {
-      cellData.push({
-        species: name,
-        index,
-        fraction: Number(buckets[index].fractions[name] || 0),
-        start: buckets[index].bucketStart,
-        end: buckets[index].bucketEnd
-      });
+    .call((g) => {
+      g.select(".domain").remove();
+      g.selectAll("text").style("font-size", "11px");
     });
-  });
 
+  // Vertical reference guides every 2 hours.
+  const guides = buildTickIndexes(buckets.length, 16);
   svg
     .append("g")
-    .selectAll("rect")
-    .data(cellData)
-    .join("rect")
-    .attr("x", (d) => x(d.index))
-    .attr("y", (d) => y(d.species))
-    .attr("width", x.bandwidth())
-    .attr("height", y.bandwidth())
-    .attr("fill", (d) => (d.fraction > 0 ? color(d.fraction) : "var(--chip-bg)"))
-    .on("mouseenter", (event, d) => {
-      tooltip.innerHTML = `${toCommonBirdName(d.species)}<br>${timeFormatter.format(
-        d.start
-      )} - ${timeFormatter.format(d.end)}<br>Occupancy: ${percentFormatter.format(d.fraction)}`;
-      tooltip.classList.add("visible");
-      moveTooltip(tooltip, event);
-    })
-    .on("mousemove", (event) => moveTooltip(tooltip, event))
-    .on("mouseleave", () => tooltip.classList.remove("visible"));
+    .selectAll("line")
+    .data(guides)
+    .join("line")
+    .attr("x1", (index) => x(index))
+    .attr("x2", (index) => x(index))
+    .attr("y1", margin.top)
+    .attr("y2", height - margin.bottom)
+    .attr("stroke", "var(--tick)")
+    .attr("stroke-opacity", 0.12)
+    .attr("shape-rendering", "crispEdges");
+
+  const line = d3
+    .line()
+    .x((d) => x(d.index))
+    .y((d) => d.y)
+    .curve(d3.curveMonotoneX);
+  const area = d3
+    .area()
+    .x((d) => x(d.index))
+    .y0((d) => d.rowBottom)
+    .y1((d) => d.y)
+    .curve(d3.curveMonotoneX);
+
+  const rowGroup = svg.append("g");
+
+  activeSpecies.forEach((name) => {
+    const rowTop = yRow(name);
+    const rowBottom = rowTop + yRow.bandwidth();
+    const rowMid = (rowTop + rowBottom) / 2;
+
+    const rowValues = buckets.map((bucket) => Number(bucket.fractions[name] || 0));
+    const rowMax = Math.max(0.01, ...rowValues);
+    const yLocalRow = yLocal.copy().domain([0, rowMax]);
+
+    const rowPoints = buckets.map((bucket, index) => {
+      const fraction = Number(bucket.fractions[name] || 0);
+      return {
+        index,
+        fraction,
+        y: rowTop + yLocalRow(fraction),
+        rowBottom: rowBottom - 1,
+        bucketStart: bucket.bucketStart,
+        bucketEnd: bucket.bucketEnd
+      };
+    });
+
+    rowGroup
+      .append("path")
+      .datum(rowPoints)
+      .attr("fill", "var(--accent)")
+      .attr("fill-opacity", 0.12)
+      .attr("d", area);
+
+    rowGroup
+      .append("path")
+      .datum(rowPoints)
+      .attr("fill", "none")
+      .attr("stroke", "var(--accent)")
+      .attr("stroke-width", 1.9)
+      .attr("stroke-opacity", 0.9)
+      .attr("d", line);
+
+    rowGroup
+      .append("rect")
+      .attr("x", margin.left)
+      .attr("y", rowTop)
+      .attr("width", width - margin.left - margin.right)
+      .attr("height", yRow.bandwidth())
+      .attr("fill", "transparent")
+      .on("mousemove", (event) => {
+        const [mx] = d3.pointer(event, svg.node());
+        const idx = Math.max(
+          0,
+          Math.min(buckets.length - 1, Math.round(x.invert(mx)))
+        );
+        const point = rowPoints[idx];
+        tooltip.innerHTML = `${toCommonBirdName(name)}<br>${timeFormatter.format(
+          point.bucketStart
+        )} - ${timeFormatter.format(point.bucketEnd)}<br>Occupancy: ${percentFormatter.format(
+          point.fraction
+        )}`;
+        tooltip.classList.add("visible");
+        moveTooltip(tooltip, event);
+      })
+      .on("mouseleave", () => tooltip.classList.remove("visible"));
+  });
 
   svg
     .append("text")
@@ -124,9 +182,18 @@ export function renderBirdHeatmapChart({
     .attr("y", margin.top - 6)
     .style("font-size", "11px")
     .style("fill", "var(--muted)")
-    .text(`${bucketMinutes}-minute occupancy heatmap`);
+    .text(`${bucketMinutes}-minute occupancy sparkline matrix`);
 
   container.append(svg.node());
+}
+
+function buildTickIndexes(bucketCount, everyN) {
+  const indexes = [];
+  for (let i = 0; i < bucketCount; i += 1) {
+    if (i % everyN === 0) indexes.push(i);
+  }
+  if (!indexes.length) indexes.push(0);
+  return indexes;
 }
 
 function formatAxisTime(date) {
@@ -153,4 +220,10 @@ function toCommonBirdName(label) {
   const match = raw.match(/^(.+)\s+\((.+)\)$/);
   if (!match) return raw;
   return match[1].trim();
+}
+
+function truncateLabel(value, maxLen) {
+  const text = String(value || "");
+  if (text.length <= maxLen) return text;
+  return `${text.slice(0, maxLen - 1)}…`;
 }
